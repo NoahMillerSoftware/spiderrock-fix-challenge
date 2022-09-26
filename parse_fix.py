@@ -95,6 +95,9 @@ def main(args):
 
     # Print duplicate field report
     for l in get_duplicate_fields_report(parsed_msgs): print(l)
+
+    # Print blank line between two reports
+    print()
     
     # Print high/low pxs of New Order Singles by Account
     for l in get_high_low_new_order_single_prices(parsed_msgs): print(l)
@@ -103,7 +106,15 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Validate FIX messages')
-    parser.add_argument('file', help='file containing FIX messages (one per line)')
+    parser = argparse.ArgumentParser(
+        description=
+'''Parse FIX messages
+
+Read a file of pipe-delimeted FIX messages (one per line), and output two reports:
+  - Duplicate Fields Report: list of messages with duplicated fields.
+  - High Low Price Report: list high and low prices for "new order single" msgs, grouped by account''',
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument('file', help='file containing pipe-delimited FIX messages (one per line)')
     args = parser.parse_args()
     sys.exit(main(args))
