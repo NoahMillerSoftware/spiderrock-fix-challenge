@@ -17,7 +17,7 @@ class TestFixValidator(unittest.TestCase):
             parse_fix.parse_msg(msg)
         )
 
-    def test_no_repeated_fields(self):
+    def test_no_duplicate_fields(self):
         msg = '8=FIX.4.2|9=0020|35=A|49=INCA|56=BATS|34=000000001|50=0028|57=PROD|108=30|10=084|'
         pmsg = parse_fix.parse_msg(msg)
         self.assertEquals(
@@ -33,7 +33,7 @@ class TestFixValidator(unittest.TestCase):
             (pmsg.parse_code, pmsg.parse_msg)
         )
 
-    def test_duplicate_fiels_report_empty_parsed_msgs(self):
+    def test_duplicate_fields_report_empty_parsed_msgs(self):
         expected_output = [
             'NO DUPLICATE FIELDS MSGS DETECTED'
         ]
@@ -97,7 +97,26 @@ class TestFixValidator(unittest.TestCase):
             'ACCOUNT=acct1, HIGH=100.0, LOW=100.0'
         ]
         parsed_msgs = [
-            ParsedMsg(0, 'GOOD', {'35': 'D', '1': 'acct1', '44': '100'}, '35=D|1=acct1')
+            ParsedMsg(0, 'GOOD', {'35': 'D', '1': 'acct1', '44': '100'}, '35=D|1=acct1|44=100')
+        ]
+        self.assertEquals(
+            expected_output,
+            parse_fix.get_high_low_new_order_single_prices(parsed_msgs)
+        )
+
+    def test_high_low_prices_two_accounts(self):
+        expected_output = [
+            'NEW ORDER SINGLE HIGH LOW PRICE REPORT:',
+            'ACCOUNT=acct1, HIGH=100.0, LOW=91.1',
+            'ACCOUNT=acct2, HIGH=101.5, LOW=98.6'
+        ]
+        parsed_msgs = [
+            ParsedMsg(0, 'GOOD', {'35': 'D', '1': 'acct1', '44': '100'}, '35=D|1=acct1|44=100'),
+            ParsedMsg(0, 'GOOD', {'35': 'D', '1': 'acct1', '44': '95'}, '35=D|1=acct1|44=95'),
+            ParsedMsg(0, 'GOOD', {'35': 'D', '1': 'acct1', '44': '91.1'}, '35=D|1=acct1|44=91.1'),
+            ParsedMsg(0, 'GOOD', {'35': 'D', '1': 'acct2', '44': '99.9'}, '35=D|1=acct1|44=99.9'),
+            ParsedMsg(0, 'GOOD', {'35': 'D', '1': 'acct2', '44': '98.6'}, '35=D|1=acct1|44=98.6'),
+            ParsedMsg(0, 'GOOD', {'35': 'D', '1': 'acct2', '44': '101.5'}, '35=D|1=acct1|44=101.5')
         ]
         self.assertEquals(
             expected_output,
