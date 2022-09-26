@@ -4,6 +4,10 @@ from collections import namedtuple
 
 ParsedMsg = namedtuple('ParsedMsg', 'parse_code parse_msg field_dict orig_msg')
 
+TAG_MSG_TYPE = '35'
+NEW_ORDER_SINGLE = 'D'
+TAG_ACCT = '1'
+TAG_PRICE = '44'
 
 def parse_msg(msg: str):
     orig_msg = msg
@@ -24,7 +28,7 @@ def parse_msg(msg: str):
     for f in fields:
         tag, value = f.split('=', 1)
 
-        # if field_name already exists, it's a duplicate field
+        # if tag already exists, it's a duplicate field
         if tag in field_dict:
             return ParsedMsg(-2, f'DUPLICATE FIELD DETECTED: field_name={tag}', {}, orig_msg)
 
@@ -51,7 +55,7 @@ def get_high_low_new_order_single_prices(parsed_msgs):
     report_lines = []
     new_order_single_msgs = [
         p for p in parsed_msgs
-        if p.field_dict.get('35')=='D'
+        if p.field_dict.get(TAG_MSG_TYPE) == NEW_ORDER_SINGLE
     ]
 
     if not new_order_single_msgs:
@@ -62,8 +66,8 @@ def get_high_low_new_order_single_prices(parsed_msgs):
     # group by account (field 1)
     high_low_by_account = {}
     for o in new_order_single_msgs:
-        acct = o.field_dict['1']
-        px = float(o.field_dict['44'])
+        acct = o.field_dict[TAG_ACCT]
+        px = float(o.field_dict[TAG_PRICE])
         if acct not in high_low_by_account:
             high_low_by_account[acct] = {
                 'high': float('-inf'),
@@ -84,8 +88,8 @@ def get_high_low_new_order_single_prices(parsed_msgs):
     return report_lines
 
 
-def main(args):
-    with open(args.file) as f:
+def main(input_filename):
+    with open(input_filename) as f:
         # get lines without trailing \n
         msgs = f.read().splitlines()
 
@@ -117,4 +121,4 @@ Read a file of pipe-delimeted FIX messages (one per line), and output two report
     )
     parser.add_argument('file', help='file containing pipe-delimited FIX messages (one per line)')
     args = parser.parse_args()
-    sys.exit(main(args))
+    sys.exit(main(args.file))
